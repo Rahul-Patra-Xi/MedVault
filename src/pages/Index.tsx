@@ -4,15 +4,18 @@ import { CircularProgress } from '@/components/dashboard/CircularProgress';
 import { RecordCard } from '@/components/RecordCard';
 import { RecordDetail } from '@/components/RecordDetail';
 import { useRecords } from '@/hooks/use-records';
-import { useMedications } from '@/hooks/use-medications';
 import { useDashboardDemo } from '@/hooks/use-dashboard-demo';
 import type { MedicalRecord } from '@/lib/types';
-import { FileText, Pill, Share2, Shield, AlertTriangle, TrendingUp, Activity, Plus, ArrowRight, Sparkles, ClipboardCopy, Ban, Info, Building2, Clock3, CheckCircle2 } from 'lucide-react';
+import { FileText, Pill, Share2, Shield, AlertTriangle, TrendingUp, Activity, Plus, ArrowRight, Sparkles, ClipboardCopy, Ban, Info, Building2, Clock3, CheckCircle2, MapPin, Star, Award } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
+import { LocationStateField } from '@/components/LocationStateField';
+import { DEFAULT_STATE_ID, normalizeStateId } from '@/lib/indian-locations';
+import { getConsultantsNearState } from '@/lib/consultants-data';
+import { KEYS, storageGet, storageSet } from '@/lib/storage';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -29,7 +32,6 @@ const item = {
 
 const Dashboard = () => {
   const { records, deleteRecord } = useRecords();
-  const { medications } = useMedications();
   const { isGuest } = useAuth();
   const { data: dashboardData, toggleMedicationTaken, revokeShare } = useDashboardDemo();
   const navigate = useNavigate();
@@ -40,8 +42,21 @@ const Dashboard = () => {
 
   const emergencyQrUrl = useMemo(() => `${window.location.origin}/shared/emergency-demo`, []);
 
+  const [consultantStateId, setConsultantStateId] = useState(() =>
+    normalizeStateId(storageGet<string>(KEYS.CONSULTANTS_NEARBY_CITY, DEFAULT_STATE_ID)),
+  );
+  const nearbyConsultants = useMemo(
+    () => getConsultantsNearState(consultantStateId, 6),
+    [consultantStateId],
+  );
+
+  const setNearbyState = (id: string) => {
+    const next = normalizeStateId(id);
+    setConsultantStateId(next);
+    storageSet(KEYS.CONSULTANTS_NEARBY_CITY, next);
+  };
+
   const recentRecords = records.slice(0, 4);
-  const activeMeds = medications.filter(m => m.active);
   const recordTotalFromDemo = useMemo(() => {
     const b = dashboardData.recordBreakdown;
     return b.prescriptions + b.labReports + b.imaging + b.others;
@@ -90,9 +105,9 @@ const Dashboard = () => {
       {/* Stats */}
       <TooltipProvider>
         {isLoadingCards ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
             {[1, 2, 3, 4].map(card => (
-              <div key={card} className="rounded-2xl border border-border/50 p-5">
+              <div key={card} className="rounded-2xl border border-border/50 p-4 sm:p-5">
                 <Skeleton className="h-5 w-1/2 mb-4" />
                 <Skeleton className="h-8 w-20 mb-3" />
                 <Skeleton className="h-3 w-11/12 mb-2" />
@@ -101,7 +116,7 @@ const Dashboard = () => {
             ))}
           </div>
         ) : (
-          <motion.div variants={container} initial="hidden" animate="visible" className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+          <motion.div variants={container} initial="hidden" animate="visible" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
             <motion.div variants={item}>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -121,9 +136,9 @@ const Dashboard = () => {
                           { label: 'Imaging', value: dashboardData.recordBreakdown.imaging },
                           { label: 'Others', value: dashboardData.recordBreakdown.others },
                         ].map(segment => (
-                          <div key={segment.label} className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground">{segment.label}</span>
-                            <span className="font-semibold text-foreground">{segment.value}</span>
+                          <div key={segment.label} className="flex items-center justify-between gap-2 text-[11px] sm:text-xs min-w-0">
+                            <span className="text-muted-foreground truncate">{segment.label}</span>
+                            <span className="font-semibold text-foreground shrink-0 tabular-nums">{segment.value}</span>
                           </div>
                         ))}
                       </div>
@@ -147,8 +162,8 @@ const Dashboard = () => {
                     >
                       <div className="space-y-2">
                         {dashboardData.medications.slice(0, 2).map(med => (
-                          <div key={med.id} className="flex items-center justify-between text-xs">
-                            <span className="truncate max-w-[11rem] text-muted-foreground">{med.name}</span>
+                          <div key={med.id} className="flex items-center justify-between gap-2 text-[11px] sm:text-xs min-w-0">
+                            <span className="truncate text-muted-foreground min-w-0">{med.name}</span>
                             <span className={`font-semibold ${med.status === 'active' ? 'text-health-green' : 'text-muted-foreground'}`}>
                               {med.status}
                             </span>
@@ -175,9 +190,9 @@ const Dashboard = () => {
                     >
                       <div className="space-y-2">
                         {activeDemoShares.slice(0, 2).map(share => (
-                          <div key={share.id} className="flex items-center justify-between text-xs">
-                            <span className="truncate max-w-[11rem] text-muted-foreground">{share.sharedWith}</span>
-                            <span className="font-semibold text-foreground">{share.expiryText}</span>
+                          <div key={share.id} className="flex items-center justify-between gap-2 text-[11px] sm:text-xs min-w-0">
+                            <span className="truncate text-muted-foreground min-w-0">{share.sharedWith}</span>
+                            <span className="font-semibold text-foreground shrink-0 text-right max-w-[45%] truncate">{share.expiryText}</span>
                           </div>
                         ))}
                       </div>
@@ -217,12 +232,12 @@ const Dashboard = () => {
         )}
       </TooltipProvider>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Recent records */}
-        <div className="xl:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-foreground">Recent Records</h3>
-            <button onClick={() => navigate('/records')} className="text-sm text-primary font-medium hover:underline flex items-center gap-1">
+      <div className="space-y-8 sm:space-y-10 min-w-0">
+        {/* Recent records — full width first */}
+        <section className="space-y-3 sm:space-y-4 min-w-0">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+            <h3 className="text-base sm:text-lg font-bold text-foreground">Recent Records</h3>
+            <button onClick={() => navigate('/records')} className="text-sm text-primary font-medium hover:underline inline-flex items-center gap-1 shrink-0">
               View all <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -246,7 +261,7 @@ const Dashboard = () => {
               </button>
             </motion.div>
           ) : (
-            <motion.div variants={container} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <motion.div variants={container} initial="hidden" animate="visible" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
               {recentRecords.map((record, i) => (
                 <motion.div key={record.id} variants={item} onClick={() => setSelectedRecord(record)} className="cursor-pointer">
                   <RecordCard record={record} index={i} />
@@ -254,62 +269,112 @@ const Dashboard = () => {
               ))}
             </motion.div>
           )}
-        </div>
+        </section>
 
-        {/* Sidebar widgets */}
-        <div className="space-y-5">
-          {/* Medications */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="rounded-2xl p-5 bg-card shadow-card border border-border/50"
-          >
-            <h3 className="text-lg font-bold text-foreground mb-4">Active Medications</h3>
-            <div className="space-y-3">
-              {activeMeds.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-2">No active medications</p>
-              ) : (
-                activeMeds.map(med => (
-                  <div key={med.id} className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors">
-                    <div className="w-10 h-10 rounded-xl bg-health-green/10 flex items-center justify-center flex-shrink-0">
-                      <Pill className="w-5 h-5 text-health-green" />
+        {/* Best Consultants — filtered by nearby location (demo) */}
+        <section className="space-y-4 min-w-0">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-end sm:justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <Award className="w-5 h-5 text-primary shrink-0" />
+                <h3 className="text-base sm:text-lg font-bold text-foreground">Best Consultants</h3>
+              </div>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Top-rated specialists near your selected area (demo data).
+              </p>
+            </div>
+            <div className="w-full sm:max-w-md min-w-0 space-y-2">
+              <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5 shrink-0" /> State / Union Territory
+              </span>
+              <LocationStateField stateId={consultantStateId} onStateChange={setNearbyState} label="" />
+            </div>
+          </div>
+
+          {nearbyConsultants.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center rounded-xl border border-dashed border-border">
+              No consultants in this state for the demo. Try another state.
+            </p>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"
+            >
+              {nearbyConsultants.map((c, i) => (
+                <motion.div
+                  key={c.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.04 * i }}
+                  className="rounded-2xl border border-border/60 bg-card p-4 shadow-card hover:shadow-card-hover transition-shadow min-w-0 flex flex-col"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 rounded-xl gradient-accent text-accent-foreground flex items-center justify-center text-sm font-bold shrink-0">
+                      {c.name.replace('Dr. ', '').split(' ').map((p) => p[0]).slice(0, 2).join('')}
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-foreground">{med.name}</p>
-                      <p className="text-xs text-muted-foreground">{med.dosage} · {med.frequency}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-foreground leading-tight break-words">{c.name}</p>
+                      <p className="text-xs text-primary font-medium mt-0.5">{c.specialty}</p>
+                      <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                        <Star className="w-3.5 h-3.5 fill-health-orange text-health-orange shrink-0" />
+                        <span className="text-sm font-semibold text-foreground tabular-nums">{c.rating.toFixed(1)}</span>
+                        <span className="text-xs text-muted-foreground">({c.reviewCount} reviews)</span>
+                      </div>
                     </div>
                   </div>
-                ))
-              )}
-            </div>
-          </motion.div>
+                  <p className="text-xs text-muted-foreground mt-3 flex items-start gap-1">
+                    <Building2 className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                    <span className="break-words">{c.hospital} · {c.area}</span>
+                  </p>
+                  <div className="flex flex-wrap items-center justify-between gap-2 mt-3 pt-3 border-t border-border/50">
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
+                      ~{c.distanceKm.toFixed(1)} km away
+                    </span>
+                    <span className="text-[11px] text-muted-foreground">{c.yearsExperience}+ yrs exp.</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/appointments')}
+                    className="mt-3 w-full py-2 rounded-xl bg-primary/10 text-primary text-sm font-semibold hover:bg-primary/15 transition-colors"
+                  >
+                    Book appointment
+                  </button>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </section>
 
+        {/* AI Summary + Emergency — full-width two columns on large screens */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 min-w-0 w-full">
           {/* AI Summary */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="rounded-2xl p-5 bg-card shadow-card border border-border/50"
+            transition={{ delay: 0.2 }}
+            className="rounded-2xl p-4 sm:p-6 bg-card shadow-card border border-border/50 min-w-0 w-full flex flex-col"
           >
-            <div className="flex items-center gap-2 mb-4">
-              <Activity className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-bold text-foreground">AI Health Summary</h3>
+            <div className="flex items-center gap-2 mb-3 sm:mb-4">
+              <Activity className="w-5 h-5 text-primary shrink-0" />
+              <h3 className="text-base sm:text-lg font-bold text-foreground">AI Health Summary</h3>
             </div>
-            <div className="space-y-3">
-              <div className="p-3 rounded-xl bg-health-green/5 border border-health-green/20">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1 min-h-0">
+              <div className="p-3 sm:p-4 rounded-xl bg-health-green/5 border border-health-green/20 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <TrendingUp className="w-4 h-4 text-health-green" />
+                  <TrendingUp className="w-4 h-4 text-health-green shrink-0" />
                   <span className="text-sm font-semibold text-health-green">Good</span>
                 </div>
-                <p className="text-xs text-muted-foreground">Blood work values are within normal range.</p>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">Blood work values are within normal range.</p>
               </div>
-              <div className="p-3 rounded-xl bg-health-orange/5 border border-health-orange/20">
+              <div className="p-3 sm:p-4 rounded-xl bg-health-orange/5 border border-health-orange/20 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <AlertTriangle className="w-4 h-4 text-health-orange" />
+                  <AlertTriangle className="w-4 h-4 text-health-orange shrink-0" />
                   <span className="text-sm font-semibold text-health-orange">Attention</span>
                 </div>
-                <p className="text-xs text-muted-foreground">LDL cholesterol slightly elevated. Consider dietary adjustments.</p>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">LDL cholesterol slightly elevated. Consider dietary adjustments.</p>
               </div>
             </div>
           </motion.div>
@@ -318,36 +383,36 @@ const Dashboard = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="rounded-2xl p-5 gradient-hero text-primary-foreground shadow-glow"
+            transition={{ delay: 0.3 }}
+            className="rounded-2xl p-4 sm:p-6 gradient-hero text-primary-foreground shadow-glow min-w-0 w-full flex flex-col"
           >
-            <h3 className="font-bold text-lg mb-2">Emergency Access</h3>
-            <p className="text-sm opacity-90 mb-4">Quick access to your critical health info in emergencies.</p>
+            <h3 className="font-bold text-base sm:text-lg mb-2">Emergency Access</h3>
+            <p className="text-xs sm:text-sm opacity-90 mb-3 sm:mb-4 max-w-2xl">Quick access to your critical health info in emergencies.</p>
             <button
               type="button"
               onClick={() => setEmergencyQrOpen(true)}
-              className="mb-4 w-full text-left rounded-xl bg-card/20 backdrop-blur-sm p-3 border border-white/20 flex items-center gap-3 transition-colors hover:bg-card/30 focus:outline-none focus:ring-2 focus:ring-white/40 cursor-pointer"
+              className="mb-3 sm:mb-4 w-full rounded-xl bg-card/20 backdrop-blur-sm p-3 sm:p-4 border border-white/20 flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6 transition-colors hover:bg-card/30 focus:outline-none focus:ring-2 focus:ring-white/40 cursor-pointer"
               aria-label="Open emergency QR code full size for scanning"
             >
-              <div className="bg-white p-2 rounded-lg shrink-0 ring-2 ring-white/30 shadow-sm">
+              <div className="bg-white p-2 sm:p-3 rounded-lg shrink-0 ring-2 ring-white/30 shadow-sm">
                 <QRCodeSVG
                   value={emergencyQrUrl}
-                  size={72}
+                  size={88}
                   level="H"
                   includeMargin={false}
                 />
               </div>
-              <div className="min-w-0">
-                <p className="text-xs font-semibold">Emergency QR</p>
-                <p className="text-[11px] opacity-90 break-words">Scan for allergies, meds, and emergency contacts.</p>
-                <p className="text-[10px] opacity-80 mt-1 font-medium underline-offset-2">Tap to enlarge for scanning</p>
+              <div className="min-w-0 flex-1 text-center sm:text-left">
+                <p className="text-sm font-semibold">Emergency QR</p>
+                <p className="text-xs sm:text-sm opacity-90 break-words mt-1">Scan for allergies, meds, and emergency contacts.</p>
+                <p className="text-[11px] opacity-80 mt-2 font-medium">Tap to enlarge for scanning</p>
               </div>
             </button>
-            <button className="px-4 py-2 rounded-xl bg-card/20 hover:bg-card/30 text-sm font-semibold transition-colors backdrop-blur-sm">
+            <button type="button" className="w-full px-4 py-2.5 sm:py-3 rounded-xl bg-card/20 hover:bg-card/30 text-xs sm:text-sm font-semibold transition-colors backdrop-blur-sm mt-auto">
               Configure Emergency Card
             </button>
           </motion.div>
-        </div>
+        </section>
       </div>
 
       {selectedRecord && (
@@ -366,9 +431,9 @@ const Dashboard = () => {
               Hold your device steady and scan at a comfortable distance. Close when finished.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex justify-center py-2">
-            <div className="rounded-2xl bg-white p-4 shadow-lg">
-              <QRCodeSVG value={emergencyQrUrl} size={280} level="H" includeMargin />
+          <div className="flex justify-center py-2 overflow-x-auto">
+            <div className="rounded-2xl bg-white p-3 sm:p-4 shadow-lg max-w-full">
+              <QRCodeSVG value={emergencyQrUrl} size={260} level="H" includeMargin className="max-w-[min(260px,calc(100vw-4rem))] h-auto w-full" />
             </div>
           </div>
         </DialogContent>
@@ -381,16 +446,16 @@ const Dashboard = () => {
             <DialogDescription>Category breakdown, recent uploads, and distribution insights.</DialogDescription>
           </DialogHeader>
           <div className="space-y-5">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
               {[
                 { label: 'Prescriptions', value: dashboardData.recordBreakdown.prescriptions },
                 { label: 'Lab Reports', value: dashboardData.recordBreakdown.labReports },
                 { label: 'Imaging', value: dashboardData.recordBreakdown.imaging },
                 { label: 'Others', value: dashboardData.recordBreakdown.others },
               ].map(entry => (
-                <div key={entry.label} className="rounded-xl border border-border/70 p-3 bg-card/60">
-                  <p className="text-xs text-muted-foreground">{entry.label}</p>
-                  <p className="text-xl font-bold text-foreground mt-1">{entry.value}</p>
+                <div key={entry.label} className="rounded-xl border border-border/70 p-2.5 sm:p-3 bg-card/60 min-w-0">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight line-clamp-2">{entry.label}</p>
+                  <p className="text-lg sm:text-xl font-bold text-foreground mt-1 tabular-nums">{entry.value}</p>
                 </div>
               ))}
             </div>
@@ -423,9 +488,9 @@ const Dashboard = () => {
               <p className="text-sm font-semibold text-foreground mb-3">Recent Uploads</p>
               <div className="space-y-2">
                 {dashboardData.recentUploads.slice(0, 3).map(upload => (
-                  <div key={upload.id} className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2">
-                    <span className="text-sm text-foreground">{upload.name}</span>
-                    <span className="text-xs text-muted-foreground">{upload.date}</span>
+                  <div key={upload.id} className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-x-2 rounded-lg border border-border/60 px-3 py-2 min-w-0">
+                    <span className="text-sm text-foreground break-words">{upload.name}</span>
+                    <span className="text-xs text-muted-foreground shrink-0">{upload.date}</span>
                   </div>
                 ))}
               </div>
@@ -448,13 +513,13 @@ const Dashboard = () => {
           </DialogHeader>
           <div className="space-y-3">
             {dashboardData.medications.map(med => (
-              <div key={med.id} className="rounded-xl border border-border/70 p-4 bg-card/60">
-                <div className="flex items-center justify-between gap-2">
-                  <div>
-                    <p className="font-semibold text-foreground">{med.name}</p>
+              <div key={med.id} className="rounded-xl border border-border/70 p-3 sm:p-4 bg-card/60 min-w-0">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-foreground break-words">{med.name}</p>
                     <p className="text-xs text-muted-foreground">{med.dosage} • {med.timing}</p>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full ${med.status === 'active' ? 'bg-health-green/10 text-health-green' : 'bg-muted text-muted-foreground'}`}>
+                  <span className={`text-xs px-2 py-1 rounded-full shrink-0 ${med.status === 'active' ? 'bg-health-green/10 text-health-green' : 'bg-muted text-muted-foreground'}`}>
                     {med.status}
                   </span>
                 </div>
@@ -484,14 +549,14 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="space-y-3">
               {activeDemoShares.map(share => (
-                <div key={share.id} className="rounded-xl border border-border/70 p-4 bg-card/60">
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <p className="font-semibold text-foreground">{share.sharedWith}</p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1"><Building2 className="w-3.5 h-3.5" /> {share.hospital}</p>
+                <div key={share.id} className="rounded-xl border border-border/70 p-3 sm:p-4 bg-card/60 min-w-0">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between mb-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-foreground break-words">{share.sharedWith}</p>
+                      <p className="text-xs text-muted-foreground flex items-start gap-1 mt-0.5"><Building2 className="w-3.5 h-3.5 shrink-0 mt-0.5" /> <span className="break-words">{share.hospital}</span></p>
                     </div>
-                    <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full flex items-center gap-1">
-                      <Clock3 className="w-3.5 h-3.5" /> {share.expiryText}
+                    <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full inline-flex items-center gap-1 w-fit shrink-0">
+                      <Clock3 className="w-3.5 h-3.5 shrink-0" /> {share.expiryText}
                     </span>
                   </div>
                   <div className="p-2 rounded-lg border border-border/60 bg-background/60 text-xs text-muted-foreground truncate">

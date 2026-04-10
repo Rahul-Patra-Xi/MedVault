@@ -18,7 +18,7 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
   return (
     <div className="flex min-h-screen w-full min-w-0 bg-background overflow-x-hidden">
       <AppSidebar />
-      <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
+      <div className="flex flex-1 flex-col min-w-0 overflow-x-hidden lg:pl-[280px]">
         {/* Header */}
         <header className="sticky top-0 z-30 glass-strong">
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 min-h-16 py-2 px-4 sm:px-6 lg:px-8">

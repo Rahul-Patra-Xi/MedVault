@@ -27,89 +27,98 @@ export function AppSidebar() {
   const initials = isGuest ? 'G' : user.name.split(' ').map(n => n[0]).join('').toUpperCase();
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full">
-      <div className="p-6 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-          <Heart className="w-5 h-5 text-primary-foreground" />
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="shrink-0 flex items-center gap-2.5 sm:gap-3 p-4 sm:p-5 lg:p-6 pr-12 lg:pr-6">
+        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow shrink-0">
+          <Heart className="w-[18px] h-[18px] sm:w-5 sm:h-5 text-primary-foreground" />
         </div>
-        <div>
-          <h1 className="text-lg font-bold text-foreground tracking-tight">MedVault</h1>
-          <p className="text-xs text-muted-foreground">Health Records</p>
+        <div className="min-w-0">
+          <h1 className="text-base sm:text-lg font-bold text-foreground tracking-tight truncate">MedVault</h1>
+          <p className="text-[11px] sm:text-xs text-muted-foreground">Health Records</p>
         </div>
       </div>
 
-      <nav className="flex-1 px-3 space-y-1 mt-4">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.to === '/'}
-            onClick={() => setMobileOpen(false)}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                isActive
-                  ? 'gradient-primary text-primary-foreground shadow-glow'
-                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-              }`
-            }
-          >
-            <item.icon className="w-5 h-5" />
-            <span>{item.label}</span>
-          </NavLink>
-        ))}
+      <nav className="min-h-0 flex-1 basis-0 overflow-y-auto overscroll-contain px-2.5 sm:px-3 pt-1 pb-3">
+        <div className="rounded-xl border border-border/80 bg-secondary/35 dark:bg-secondary/25 p-1.5 sm:p-2 space-y-0.5 sm:space-y-1 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === '/'}
+              onClick={() => setMobileOpen(false)}
+              className={({ isActive }) =>
+                `flex items-center gap-2.5 sm:gap-3 px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-lg text-[13px] sm:text-sm font-medium transition-all duration-200 ${
+                  isActive
+                    ? 'gradient-primary text-primary-foreground shadow-glow'
+                    : 'text-muted-foreground hover:bg-background/80 hover:text-foreground'
+                }`
+              }
+            >
+              <item.icon className="w-[18px] h-[18px] sm:w-5 sm:h-5 shrink-0" />
+              <span className="truncate">{item.label}</span>
+            </NavLink>
+          ))}
+        </div>
       </nav>
 
-      <div className="p-3 space-y-1 border-t border-border">
+      <div className="shrink-0 space-y-1 border-t border-border/80 bg-card/80 px-2.5 sm:px-3 pt-4 sm:pt-5 pb-2 sm:pb-3 backdrop-blur-sm">
         <button
+          type="button"
           onClick={toggleTheme}
-          className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-all duration-200 w-full"
+          className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl text-[13px] sm:text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-all duration-200 w-full"
         >
-          {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-          <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+          {theme === 'light' ? <Moon className="w-[18px] h-[18px] sm:w-5 sm:h-5 shrink-0" /> : <Sun className="w-[18px] h-[18px] sm:w-5 sm:h-5 shrink-0" />}
+          <span className="truncate">{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
         </button>
         <NavLink
           to="/settings"
           onClick={() => setMobileOpen(false)}
           className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+            `flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl text-[13px] sm:text-sm font-medium transition-all duration-200 ${
               isActive
                 ? 'gradient-primary text-primary-foreground shadow-glow'
                 : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
             }`
           }
         >
-          <Settings className="w-5 h-5" />
+          <Settings className="w-[18px] h-[18px] sm:w-5 sm:h-5 shrink-0" />
           <span>Settings</span>
         </NavLink>
         {isGuest ? (
           <button
+            type="button"
             onClick={() => { setMobileOpen(false); navigate('/login'); }}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-primary hover:bg-primary/10 transition-all duration-200 w-full"
+            className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl text-[13px] sm:text-sm font-medium text-primary hover:bg-primary/10 transition-all duration-200 w-full"
           >
-            <LogIn className="w-5 h-5" />
-            <span>Sign In / Sign Up</span>
+            <LogIn className="w-[18px] h-[18px] sm:w-5 sm:h-5 shrink-0" />
+            <span className="truncate text-left">Sign In / Sign Up</span>
           </button>
         ) : (
           <button
+            type="button"
             onClick={logout}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-all duration-200 w-full"
+            className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl text-[13px] sm:text-sm font-medium text-destructive hover:bg-destructive/10 transition-all duration-200 w-full"
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-[18px] h-[18px] sm:w-5 sm:h-5 shrink-0" />
             <span>Sign Out</span>
           </button>
         )}
       </div>
 
-      <div className="p-4 mx-3 mb-3 rounded-xl bg-secondary/50">
-        <div className="flex items-center gap-3">
-          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold ${isGuest ? 'bg-muted text-muted-foreground' : 'gradient-accent text-accent-foreground'}`}>
-            {initials}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate">{user.name}</p>
-            <p className="text-xs text-muted-foreground truncate">
-              {isGuest ? 'Browsing as guest' : user.email}
-            </p>
+      <div className="shrink-0 px-2.5 sm:px-3 pt-3 sm:pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] sm:pb-[max(1.5rem,env(safe-area-inset-bottom,0px))]">
+        <div className="rounded-xl bg-secondary/50 border border-border/60 p-3 sm:p-4">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div
+              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex shrink-0 items-center justify-center text-xs sm:text-sm font-bold ${isGuest ? 'bg-muted text-muted-foreground' : 'gradient-accent text-accent-foreground'}`}
+            >
+              {initials}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs sm:text-sm font-semibold text-foreground truncate">{user.name}</p>
+              <p className="text-[11px] sm:text-xs text-muted-foreground truncate">
+                {isGuest ? 'Browsing as guest' : user.email}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -140,22 +149,29 @@ export function AppSidebar() {
               animate={{ x: 0 }}
               exit={{ x: -280 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed left-0 top-0 bottom-0 w-[280px] bg-card border-r border-border z-50 lg:hidden"
+              className="fixed left-0 top-0 z-50 flex h-dvh max-h-dvh w-[min(280px,calc(100vw-12px))] flex-col overflow-hidden border-r border-border bg-card lg:hidden"
             >
               <button
+                type="button"
                 onClick={() => setMobileOpen(false)}
-                className="absolute top-4 right-4 w-8 h-8 rounded-lg hover:bg-secondary flex items-center justify-center"
+                className="absolute right-3 top-3 z-[1] flex h-9 w-9 items-center justify-center rounded-lg hover:bg-secondary sm:right-4 sm:top-4"
+                aria-label="Close menu"
               >
-                <X className="w-4 h-4 text-muted-foreground" />
+                <X className="h-4 w-4 text-muted-foreground" />
               </button>
-              <SidebarContent />
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden pt-1">
+                <SidebarContent />
+              </div>
             </motion.aside>
           </>
         )}
       </AnimatePresence>
 
-      <aside className="hidden lg:block w-[280px] min-h-screen bg-card border-r border-border flex-shrink-0">
-        <div className="sticky top-0 h-screen overflow-y-auto">
+      <aside
+        className="hidden lg:flex lg:fixed lg:left-0 lg:top-0 lg:z-[45] h-dvh max-h-dvh w-[280px] flex-col overflow-hidden rounded-r-2xl border-r border-border/80 bg-card shadow-[6px_0_28px_-8px_rgba(0,0,0,0.12)] dark:shadow-[6px_0_32px_-6px_rgba(0,0,0,0.45)]"
+        aria-label="Main navigation"
+      >
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <SidebarContent />
         </div>
       </aside>

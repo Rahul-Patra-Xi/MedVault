@@ -48,5 +48,6 @@ export const KEYS = {
   SHARED_LINKS: 'medvault_shared_links',
   AUDIT_LOG: 'medvault_audit_log',
   APPOINTMENTS: 'medvault_appointments',
+  CONSULTANTS_NEARBY_CITY: 'medvault_consultants_nearby_city',
   THEME: 'theme',
 } as const;

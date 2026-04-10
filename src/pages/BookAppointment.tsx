@@ -1,16 +1,17 @@
 import { AppLayout } from '@/components/AppLayout';
 import { useAudit } from '@/hooks/use-audit';
+import { LocationStateField } from '@/components/LocationStateField';
 import {
   BOOKABLE_DOCTORS,
-  LOCATION_OPTIONS,
-  cityLabel,
   defaultAppointmentDate,
-  doctorsForCity,
+  doctorsForState,
   getAvailableSlots,
   maxAppointmentDate,
+  stateDisplayName,
   type BookableDoctor,
   type StoredAppointment,
 } from '@/lib/appointments-data';
+import { DEFAULT_STATE_ID, normalizeStateId } from '@/lib/indian-locations';
 import { KEYS, generateId, storageGet, storageSet } from '@/lib/storage';
 import { motion } from 'framer-motion';
 import { CalendarCheck, Clock, MapPin, Stethoscope, User, Building2, CheckCircle2 } from 'lucide-react';
@@ -23,14 +24,14 @@ function loadAppointments(): StoredAppointment[] {
 
 const BookAppointment = () => {
   const { log } = useAudit();
-  const [cityId, setCityId] = useState<string>(LOCATION_OPTIONS[0].id);
+  const [stateId, setStateId] = useState<string>(() => DEFAULT_STATE_ID);
   const [doctorId, setDoctorId] = useState<string | null>(null);
   const [date, setDate] = useState(defaultAppointmentDate);
   const [time, setTime] = useState<string | null>(null);
   const [reason, setReason] = useState('');
   const [appointments, setAppointments] = useState<StoredAppointment[]>(loadAppointments);
 
-  const doctors = useMemo(() => doctorsForCity(cityId), [cityId]);
+  const doctors = useMemo(() => doctorsForState(stateId), [stateId]);
   const selectedDoctor = useMemo(
     () => (doctorId ? BOOKABLE_DOCTORS.find((d) => d.id === doctorId) ?? null : null),
     [doctorId],
@@ -46,8 +47,8 @@ const BookAppointment = () => {
     storageSet(KEYS.APPOINTMENTS, next);
   }, []);
 
-  const onCityChange = (next: string) => {
-    setCityId(next);
+  const onStateChange = (next: string) => {
+    setStateId(normalizeStateId(next));
     setDoctorId(null);
     setTime(null);
   };
@@ -76,7 +77,7 @@ const BookAppointment = () => {
       doctorName: selectedDoctor.name,
       specialty: selectedDoctor.specialty,
       hospital: selectedDoctor.hospital,
-      cityLabel: cityLabel(cityId),
+      cityLabel: stateDisplayName(stateId),
       date,
       time,
       reason: reason.trim() || undefined,
@@ -109,50 +110,47 @@ const BookAppointment = () => {
       title="Book an Appointment"
       subtitle="Find available doctors by location and schedule a visit"
     >
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="xl:col-span-2 space-y-6"
-        >
-          <div className="rounded-2xl border border-border/50 bg-card p-5 sm:p-6 shadow-card">
-            <div className="flex items-center gap-2 mb-4">
-              <MapPin className="w-5 h-5 text-primary" />
-              <h3 className="font-bold text-foreground">Location</h3>
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(260px,320px)_minmax(0,1fr)_minmax(240px,280px)] gap-4 sm:gap-6 min-w-0 xl:items-start">
+        {/* Left: location + doctor list — sticky on xl, no nested scrolling */}
+        <aside className="min-w-0 space-y-4 sm:space-y-5 xl:sticky xl:top-24 xl:z-10 xl:self-start xl:overflow-visible">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl border border-border/50 bg-card p-4 sm:p-6 shadow-card min-w-0"
+          >
+            <div className="flex items-center gap-2 mb-3 sm:mb-4">
+              <MapPin className="w-5 h-5 text-primary shrink-0" />
+              <h3 className="font-bold text-foreground text-base sm:text-lg">Location</h3>
             </div>
-            <label className="text-sm font-medium text-foreground block mb-2">City / region</label>
-            <select
-              value={cityId}
-              onChange={(e) => onCityChange(e.target.value)}
-              className="w-full max-w-md px-4 py-2.5 rounded-xl bg-secondary border border-border text-foreground text-sm"
-            >
-              {LOCATION_OPTIONS.map((loc) => (
-                <option key={loc.id} value={loc.id}>
-                  {loc.label}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-muted-foreground mt-2">
-              Only doctors practicing in this area are shown.
+            <LocationStateField stateId={stateId} onStateChange={onStateChange} />
+            <p className="text-xs text-muted-foreground mt-3 leading-relaxed">
+              Demo doctors are available in every state/UT.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="rounded-2xl border border-border/50 bg-card p-5 sm:p-6 shadow-card">
-            <div className="flex items-center gap-2 mb-4">
-              <Stethoscope className="w-5 h-5 text-primary" />
-              <h3 className="font-bold text-foreground">Available doctors</h3>
-              <span className="text-xs text-muted-foreground ml-auto">{doctors.length} in area</span>
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="rounded-2xl border border-border/50 bg-card p-4 sm:p-6 shadow-card min-w-0"
+          >
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
+              <div className="flex items-center gap-2 min-w-0">
+                <Stethoscope className="w-5 h-5 text-primary shrink-0" />
+                <h3 className="font-bold text-foreground text-base sm:text-lg">Available doctors</h3>
+              </div>
+              <span className="text-xs text-muted-foreground sm:shrink-0">{doctors.length} in this state</span>
             </div>
             {doctors.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No doctors listed for this location in the demo.</p>
+              <p className="text-sm text-muted-foreground">No doctors for this state.</p>
             ) : (
-              <ul className="space-y-2">
+              <ul className="space-y-2 overflow-visible">
                 {doctors.map((d, i) => (
                   <motion.li
                     key={d.id}
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.04 }}
+                    transition={{ delay: Math.min(i * 0.02, 0.3) }}
                   >
                     <button
                       type="button"
@@ -184,13 +182,16 @@ const BookAppointment = () => {
                 ))}
               </ul>
             )}
-          </div>
+          </motion.div>
+        </aside>
 
-          {selectedDoctor && (
+        {/* Center: date & time (scrolls with page; left column stays pinned on xl) */}
+        <div className="min-w-0 space-y-4 sm:space-y-6">
+          {selectedDoctor ? (
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              className="rounded-2xl border border-border/50 bg-card p-5 sm:p-6 shadow-card"
+              className="rounded-2xl border border-border/50 bg-card p-4 sm:p-6 shadow-card min-w-0"
             >
               <div className="flex items-center gap-2 mb-4">
                 <CalendarCheck className="w-5 h-5 text-primary" />
@@ -208,7 +209,7 @@ const BookAppointment = () => {
                       setDate(e.target.value);
                       setTime(null);
                     }}
-                    className="w-full px-4 py-2.5 rounded-xl bg-secondary border border-border text-foreground text-sm"
+                    className="w-full min-h-[2.75rem] sm:min-h-0 px-3 sm:px-4 py-2.5 rounded-xl bg-secondary border border-border text-foreground text-base sm:text-sm"
                   />
                 </div>
                 <div>
@@ -217,7 +218,7 @@ const BookAppointment = () => {
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
                     placeholder="e.g. follow-up, annual check-up"
-                    className="w-full px-4 py-2.5 rounded-xl bg-secondary border border-border text-foreground text-sm placeholder:text-muted-foreground"
+                    className="w-full min-h-[2.75rem] sm:min-h-0 px-3 sm:px-4 py-2.5 rounded-xl bg-secondary border border-border text-foreground text-base sm:text-sm placeholder:text-muted-foreground"
                   />
                 </div>
               </div>
@@ -254,14 +255,22 @@ const BookAppointment = () => {
                 Confirm appointment
               </button>
             </motion.div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-border/60 bg-card/50 p-6 sm:p-10 text-center min-w-0">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                <span className="xl:hidden">Select a doctor from the list above to choose a date and time.</span>
+                <span className="hidden xl:inline">Select a doctor from the list on the left to choose a date and time.</span>
+              </p>
+            </div>
           )}
-        </motion.div>
+        </div>
 
+        {/* Right: saved appointments — can scroll when the list is long */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="rounded-2xl border border-border/50 bg-card p-5 sm:p-6 shadow-card h-fit xl:sticky xl:top-24"
+          transition={{ delay: 0.08 }}
+          className="rounded-2xl border border-border/50 bg-card p-4 sm:p-6 shadow-card min-w-0 xl:sticky xl:top-24 xl:self-start xl:max-h-[min(80dvh,calc(100dvh-7rem))] xl:overflow-y-auto xl:overscroll-contain"
         >
           <h3 className="font-bold text-foreground mb-1">Your appointments</h3>
           <p className="text-xs text-muted-foreground mb-4">Saved on this device</p>

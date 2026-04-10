@@ -46,6 +46,10 @@ export interface User {
   phone?: string;
   dob?: string;
   bloodType?: string;
+  addressLine?: string;
+  /** Indian state / UT id (see `INDIAN_STATES_UT`) */
+  addressStateId?: string;
+  addressPin?: string;
 }
 
 export interface AuditEntry {

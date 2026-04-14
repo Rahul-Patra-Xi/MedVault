@@ -42,6 +42,8 @@ export function generateId(): string {
 
 // Storage keys
 export const KEYS = {
+  ACCOUNTS: 'medvault_accounts',
+  APP_SETTINGS: 'medvault_app_settings',
   USER: 'medvault_user',
   RECORDS: 'medvault_records',
   MEDICATIONS: 'medvault_medications',

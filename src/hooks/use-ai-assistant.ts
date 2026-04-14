@@ -15,7 +15,8 @@ const DEFAULT_MESSAGES: AssistantMessage[] = [
   {
     id: 'ai-hello',
     role: 'assistant',
-    content: 'Hi! I am your AI Health Assistant. Ask me for medication reminders, upcoming share expiries, or a quick summary of your records.',
+    content:
+      'Hi! I am your AI Health Assistant. Ask about medications, records, or sharing — or change app preferences in plain language (for example: “switch to dark mode”, “turn off medication reminders”, “set my area to Karnataka”, “disable two-factor”).',
     createdAt: new Date().toISOString(),
   },
 ];
@@ -56,7 +57,12 @@ function buildInsight(records: MedicalRecord[], medications: Medication[], share
   return 'I can help with medication status, record summaries, and secure sharing insights. Try: "Give me today’s medication plan".';
 }
 
-export function useAiAssistant(records: MedicalRecord[], medications: Medication[], sharedLinks: SharedLink[]) {
+export function useAiAssistant(
+  records: MedicalRecord[],
+  medications: Medication[],
+  sharedLinks: SharedLink[],
+  applyAssistantMessage?: (text: string) => string | null,
+) {
   const [messages, setMessages] = useState<AssistantMessage[]>(loadMessages);
   const [isThinking, setIsThinking] = useState(false);
 
@@ -81,24 +87,26 @@ export function useAiAssistant(records: MedicalRecord[], medications: Medication
     setIsThinking(true);
 
     window.setTimeout(() => {
+      const settingsReply = applyAssistantMessage?.(cleaned) ?? null;
       const assistantMessage: AssistantMessage = {
         id: generateId(),
         role: 'assistant',
-        content: buildInsight(records, medications, sharedLinks, cleaned),
+        content: settingsReply ?? buildInsight(records, medications, sharedLinks, cleaned),
         createdAt: new Date().toISOString(),
       };
       persist([...withUser, assistantMessage]);
       setIsThinking(false);
     }, 700);
-  }, [medications, messages, persist, records, sharedLinks]);
+  }, [applyAssistantMessage, medications, messages, persist, records, sharedLinks]);
 
   const quickPrompts = useMemo(
     () => [
       'Give me today’s medication plan',
       'Any share links expiring soon?',
       'Summarize my latest health records',
+      'Switch to dark mode',
     ],
-    []
+    [],
   );
 
   const clearChat = useCallback(() => {

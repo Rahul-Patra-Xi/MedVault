@@ -1,6 +1,6 @@
 import { 
   LayoutDashboard, FileText, Clock, Share2, Shield, Settings, 
-  Moon, Sun, Heart, Menu, X, LogOut, LogIn, Bot, CalendarCheck
+  Moon, Sun, Stethoscope, Menu, X, LogOut, LogIn, Bot, CalendarCheck
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useTheme } from '@/hooks/use-theme';
@@ -30,7 +30,7 @@ export function AppSidebar() {
     <div className="flex h-full min-h-0 flex-col">
       <div className="shrink-0 flex items-center gap-2.5 sm:gap-3 p-4 sm:p-5 lg:p-6 pr-12 lg:pr-6">
         <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow shrink-0">
-          <Heart className="w-[18px] h-[18px] sm:w-5 sm:h-5 text-primary-foreground" />
+          <Stethoscope className="w-[18px] h-[18px] sm:w-5 sm:h-5 text-primary-foreground" />
         </div>
         <div className="min-w-0">
           <h1 className="text-base sm:text-lg font-bold text-foreground tracking-tight truncate">MedVault</h1>

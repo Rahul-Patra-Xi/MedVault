@@ -1,6 +1,9 @@
 import { AppLayout } from '@/components/AppLayout';
+import { Switch } from '@/components/ui/switch';
+import { useAppSettings } from '@/hooks/use-app-settings';
 import { useAuth } from '@/hooks/use-auth';
 import { useAudit } from '@/hooks/use-audit';
+import type { NotificationKey } from '@/lib/app-settings';
 import { INDIAN_STATES_UT } from '@/lib/indian-locations';
 import { motion } from 'framer-motion';
 import { User, Bell, Download, Trash2, MapPin } from 'lucide-react';
@@ -11,9 +14,17 @@ import { toast } from 'sonner';
 const fieldInputClass =
   'w-full min-h-[2.75rem] sm:min-h-0 px-3 sm:px-4 py-2.5 rounded-xl bg-secondary border border-border text-foreground text-base sm:text-sm';
 
+const NOTIFICATION_ROWS: { key: NotificationKey; label: string }[] = [
+  { key: 'medicationReminders', label: 'Medication reminders' },
+  { key: 'appointmentReminders', label: 'Appointment reminders' },
+  { key: 'recordSharingAlerts', label: 'Record sharing alerts' },
+  { key: 'securityAlerts', label: 'Security alerts' },
+];
+
 const Settings = () => {
   const { user, updateProfile, logout } = useAuth();
   const { log } = useAudit();
+  const { settings, setNotification } = useAppSettings();
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [dob, setDob] = useState(user?.dob || '');
@@ -142,12 +153,14 @@ const Settings = () => {
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-card rounded-2xl p-4 sm:p-6 shadow-card border border-border/50 min-w-0">
           <h3 className="font-bold text-foreground mb-4 flex items-center gap-2"><Bell className="w-5 h-5 text-primary" /> Notifications</h3>
-          {['Medication reminders', 'Appointment reminders', 'Record sharing alerts', 'Security alerts'].map((item, i) => (
-            <div key={i} className="flex items-center justify-between py-3 border-b border-border/50 last:border-0">
-              <span className="text-sm text-foreground">{item}</span>
-              <button className="relative w-12 h-7 rounded-full bg-health-green transition-colors">
-                <div className="absolute top-1 left-6 w-5 h-5 rounded-full bg-card shadow-sm" />
-              </button>
+          {NOTIFICATION_ROWS.map(({ key, label }) => (
+            <div key={key} className="flex items-center justify-between gap-3 py-3 border-b border-border/50 last:border-0">
+              <span className="text-sm text-foreground">{label}</span>
+              <Switch
+                checked={settings.notifications[key]}
+                onCheckedChange={(v) => setNotification(key, v)}
+                aria-label={label}
+              />
             </div>
           ))}
         </motion.div>

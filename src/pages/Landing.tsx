@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/hooks/use-theme';
 import {
-  Heart, Shield, Share2, FileText, Clock, Zap, Lock, Smartphone,
+  Stethoscope, Shield, Share2, FileText, Clock, Zap, Lock, Smartphone,
   ChevronRight, Moon, Sun, Star, ArrowRight, Brain
 } from 'lucide-react';
 
@@ -53,7 +53,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-              <Heart className="w-4 h-4 text-primary-foreground" />
+              <Stethoscope className="w-4 h-4 text-primary-foreground" />
             </div>
             <span className="text-lg font-bold tracking-tight">MedVault</span>
           </div>
@@ -250,7 +250,7 @@ export default function Landing() {
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-                  <Heart className="w-4 h-4 text-primary-foreground" />
+                  <Stethoscope className="w-4 h-4 text-primary-foreground" />
                 </div>
                 <span className="font-bold">MedVault</span>
               </div>

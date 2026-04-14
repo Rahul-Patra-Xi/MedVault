@@ -3,7 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ThemeProvider } from "@/hooks/use-theme";
+import { AppSettingsProvider } from "@/hooks/use-app-settings";
 import { AuthProvider } from "@/hooks/use-auth";
 import { RecordsProvider } from "@/hooks/use-records";
 import { MedicationsProvider } from "@/hooks/use-medications";
@@ -25,7 +25,7 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <ThemeProvider>
+  <AppSettingsProvider>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <RecordsProvider>
@@ -58,7 +58,7 @@ const App = () => (
         </RecordsProvider>
       </AuthProvider>
     </QueryClientProvider>
-  </ThemeProvider>
+  </AppSettingsProvider>
 );
 
 export default App;

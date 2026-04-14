@@ -1,4 +1,5 @@
 import { AppLayout } from '@/components/AppLayout';
+import { useAppSettings } from '@/hooks/use-app-settings';
 import { useAiAssistant } from '@/hooks/use-ai-assistant';
 import { useMedications } from '@/hooks/use-medications';
 import { useRecords } from '@/hooks/use-records';
@@ -11,7 +12,13 @@ const Assistant = () => {
   const { records } = useRecords();
   const { medications } = useMedications();
   const { sharedLinks } = useSharing();
-  const { messages, sendMessage, quickPrompts, clearChat, isThinking } = useAiAssistant(records, medications, sharedLinks);
+  const { applyAssistantMessage } = useAppSettings();
+  const { messages, sendMessage, quickPrompts, clearChat, isThinking } = useAiAssistant(
+    records,
+    medications,
+    sharedLinks,
+    applyAssistantMessage,
+  );
   const [input, setInput] = useState('');
 
   const metrics = useMemo(() => {
@@ -37,7 +44,9 @@ const Assistant = () => {
               </div>
               <div className="min-w-0">
                 <h3 className="font-bold text-foreground">MedVault Copilot</h3>
-                <p className="text-xs text-muted-foreground break-words">Demo AI assistant for medication, records, and sharing guidance.</p>
+                <p className="text-xs text-muted-foreground break-words">
+                  Demo copilot for health insights — and natural-language control of theme, notifications, security toggles, and your dashboard consultant region.
+                </p>
               </div>
             </div>
             <button
@@ -91,7 +100,7 @@ const Assistant = () => {
                   if (e.key === 'Enter') onSend();
                 }}
                 className="flex-1 min-w-0 rounded-xl border border-border/60 bg-background px-4 py-2.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/40"
-                placeholder="Ask about medications, records, or sharing activity..."
+                placeholder="Ask about health data, or say e.g. “light mode”, “disable security alerts”, “set state to Tamil Nadu”…"
               />
               <button onClick={onSend} className="px-4 py-2.5 rounded-xl gradient-primary text-primary-foreground font-medium flex items-center justify-center gap-2 shrink-0">
                 <Send className="w-4 h-4" /> Send

@@ -4,6 +4,14 @@ import type { User } from '@/lib/types';
 
 const GUEST_USER: User = { id: 'guest', name: 'Guest User', email: 'guest@medvault.app' };
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
+
+export function isValidEmail(email: string): boolean {
+  const t = email.trim();
+  if (!t || t.length > 254) return false;
+  return EMAIL_RE.test(t);
+}
+
 interface AuthContextType {
   user: User;
   isGuest: boolean;
@@ -28,8 +36,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isGuest = user.id === 'guest';
 
   const login = useCallback((email: string, _password: string) => {
-    if (!email) return { success: false, error: 'Email is required' };
-    const accounts = storageGet<Record<string, { name: string; password: string }>>('medvault_accounts', {});
+    if (!email.trim()) return { success: false, error: 'Email is required' };
+    if (!isValidEmail(email)) return { success: false, error: 'Please enter a valid email address' };
+    const accounts = storageGet<Record<string, { name: string; password: string }>>(KEYS.ACCOUNTS, {});
     const account = accounts[email.toLowerCase()];
     if (!account) return { success: false, error: 'Account not found. Please sign up first.' };
     if (account.password !== _password) return { success: false, error: 'Invalid password' };
@@ -40,12 +49,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signup = useCallback((name: string, email: string, password: string) => {
-    if (!name || !email || !password) return { success: false, error: 'All fields are required' };
+    if (!name.trim() || !email.trim() || !password) return { success: false, error: 'All fields are required' };
+    if (!isValidEmail(email)) return { success: false, error: 'Please enter a valid email address' };
     if (password.length < 6) return { success: false, error: 'Password must be at least 6 characters' };
-    const accounts = storageGet<Record<string, { name: string; password: string }>>('medvault_accounts', {});
+    const accounts = storageGet<Record<string, { name: string; password: string }>>(KEYS.ACCOUNTS, {});
     if (accounts[email.toLowerCase()]) return { success: false, error: 'Account already exists' };
-    accounts[email.toLowerCase()] = { name, password };
-    storageSet('medvault_accounts', accounts);
+    accounts[email.toLowerCase()] = { name: name.trim(), password };
+    storageSet(KEYS.ACCOUNTS, accounts);
     const u: User = { id: generateId(), name, email: email.toLowerCase() };
     storageSet(KEYS.USER, u);
     setUser(u);

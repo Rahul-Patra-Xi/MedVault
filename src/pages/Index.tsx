@@ -13,9 +13,9 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { LocationStateField } from '@/components/LocationStateField';
-import { DEFAULT_STATE_ID, normalizeStateId } from '@/lib/indian-locations';
+import { normalizeStateId } from '@/lib/indian-locations';
 import { getConsultantsNearState } from '@/lib/consultants-data';
-import { KEYS, storageGet, storageSet } from '@/lib/storage';
+import { useAppSettings } from '@/hooks/use-app-settings';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -33,6 +33,7 @@ const item = {
 const Dashboard = () => {
   const { records, deleteRecord } = useRecords();
   const { isGuest } = useAuth();
+  const { settings, setConsultantsStateId } = useAppSettings();
   const { data: dashboardData, toggleMedicationTaken, revokeShare } = useDashboardDemo();
   const navigate = useNavigate();
   const [selectedRecord, setSelectedRecord] = useState<MedicalRecord | null>(null);
@@ -42,18 +43,14 @@ const Dashboard = () => {
 
   const emergencyQrUrl = useMemo(() => `${window.location.origin}/shared/emergency-demo`, []);
 
-  const [consultantStateId, setConsultantStateId] = useState(() =>
-    normalizeStateId(storageGet<string>(KEYS.CONSULTANTS_NEARBY_CITY, DEFAULT_STATE_ID)),
-  );
+  const consultantStateId = settings.consultantsStateId;
   const nearbyConsultants = useMemo(
     () => getConsultantsNearState(consultantStateId, 6),
     [consultantStateId],
   );
 
   const setNearbyState = (id: string) => {
-    const next = normalizeStateId(id);
-    setConsultantStateId(next);
-    storageSet(KEYS.CONSULTANTS_NEARBY_CITY, next);
+    setConsultantsStateId(normalizeStateId(id));
   };
 
   const recentRecords = records.slice(0, 4);

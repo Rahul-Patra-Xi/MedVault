@@ -1,4 +1,4 @@
-# 🩺 MediVault
+# 🩺 MedVault
 
 > Unified Personal Health Record & Secure Medical Data Sharing Platform.
 
@@ -8,7 +8,7 @@
 
 Healthcare data is often fragmented across hospitals, labs, diagnostic centers, and personal files. This makes it difficult for patients to quickly access records, share accurate history, and make timely care decisions.
 
-**MediVault** solves this by giving users one secure place to:
+**MedVault** solves this by giving users one secure place to:
 - Store and organize medical records
 - Access history anytime
 - Share selected data safely with doctors or caregivers
@@ -85,8 +85,8 @@ Healthcare data is often fragmented across hospitals, labs, diagnostic centers, 
 ### 1) Clone the repository
 
 ```bash
-git clone https://github.com/your-username/medivault.git
-cd medivault
+git clone https://github.com/your-username/medvault.git
+cd medvault
 ```
 
 ### 2) Install dependencies
@@ -126,7 +126,7 @@ npm run test
 ## 🗂 Project Structure
 
 ```text
-MediVault/
+medvault/
 ├── public/                # Static assets
 ├── src/                   # Application source code
 │   ├── components/        # Reusable UI components
@@ -166,7 +166,7 @@ MediVault/
 
 ## 🔐 Security & Privacy Approach
 
-MediVault is built with a **privacy-first mindset**:
+medvault is built with a **privacy-first mindset**:
 
 - Data access is controlled by the user
 - Sharing is scoped to selected records only

@@ -1,27 +1,33 @@
 import { AppLayout } from '@/components/AppLayout';
+import { useAppSettings } from '@/hooks/use-app-settings';
 import { useAudit } from '@/hooks/use-audit';
+import type { SecurityKey } from '@/lib/app-settings';
 import { motion } from 'framer-motion';
-import { Shield, Key, Fingerprint, Lock, Eye, AlertTriangle, CheckCircle } from 'lucide-react';
-import { useState } from 'react';
+import { Shield, Key, Fingerprint, Lock, Eye, AlertTriangle, CheckCircle, type LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
-const securityDefaults = [
-  { id: 'tfa', label: 'Two-Factor Authentication', description: 'Add an extra layer of security to your account', icon: Key, enabled: true },
-  { id: 'bio', label: 'Biometric Login', description: 'Use fingerprint or face recognition', icon: Fingerprint, enabled: false },
-  { id: 'e2e', label: 'End-to-End Encryption', description: 'All records encrypted at rest and in transit', icon: Lock, enabled: true },
-  { id: 'log', label: 'Access Logging', description: 'Track all access to your records', icon: Eye, enabled: true },
+const securityItems: {
+  id: SecurityKey;
+  label: string;
+  description: string;
+  icon: LucideIcon;
+}[] = [
+  { id: 'tfa', label: 'Two-Factor Authentication', description: 'Add an extra layer of security to your account', icon: Key },
+  { id: 'bio', label: 'Biometric Login', description: 'Use fingerprint or face recognition', icon: Fingerprint },
+  { id: 'e2e', label: 'End-to-End Encryption', description: 'All records encrypted at rest and in transit', icon: Lock },
+  { id: 'log', label: 'Access Logging', description: 'Track all access to your records', icon: Eye },
 ];
 
 const Security = () => {
   const { entries } = useAudit();
-  const [settings, setSettings] = useState(securityDefaults);
+  const { settings, toggleSecurity } = useAppSettings();
 
-  const toggle = (id: string) => {
-    setSettings(prev => prev.map(s => s.id === id ? { ...s, enabled: !s.enabled } : s));
+  const toggle = (id: SecurityKey) => {
+    toggleSecurity(id);
     toast.success('Security setting updated');
   };
 
-  const enabledCount = settings.filter(s => s.enabled).length;
+  const enabledCount = securityItems.filter(s => settings.security[s.id]).length;
   const score = Math.round((enabledCount / settings.length) * 100);
 
   const formatTime = (iso: string) => {
@@ -54,22 +60,25 @@ const Security = () => {
       </motion.div>
 
       <div className="space-y-3">
-        {settings.map((item, i) => (
-          <motion.div key={item.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="bg-card rounded-2xl p-5 shadow-card border border-border/50 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${item.enabled ? 'bg-health-green/10' : 'bg-muted'}`}>
-                <item.icon className={`w-5 h-5 ${item.enabled ? 'text-health-green' : 'text-muted-foreground'}`} />
+        {securityItems.map((item, i) => {
+          const enabled = settings.security[item.id];
+          return (
+            <motion.div key={item.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="bg-card rounded-2xl p-5 shadow-card border border-border/50 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${enabled ? 'bg-health-green/10' : 'bg-muted'}`}>
+                  <item.icon className={`w-5 h-5 ${enabled ? 'text-health-green' : 'text-muted-foreground'}`} />
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">{item.label}</p>
+                  <p className="text-sm text-muted-foreground">{item.description}</p>
+                </div>
               </div>
-              <div>
-                <p className="font-semibold text-foreground">{item.label}</p>
-                <p className="text-sm text-muted-foreground">{item.description}</p>
-              </div>
-            </div>
-            <button onClick={() => toggle(item.id)} className={`relative w-12 h-7 rounded-full transition-colors ${item.enabled ? 'bg-health-green' : 'bg-muted'}`}>
-              <div className={`absolute top-1 w-5 h-5 rounded-full bg-card shadow-sm transition-transform ${item.enabled ? 'left-6' : 'left-1'}`} />
-            </button>
-          </motion.div>
-        ))}
+              <button type="button" onClick={() => toggle(item.id)} className={`relative w-12 h-7 rounded-full transition-colors ${enabled ? 'bg-health-green' : 'bg-muted'}`}>
+                <div className={`absolute top-1 w-5 h-5 rounded-full bg-card shadow-sm transition-transform ${enabled ? 'left-6' : 'left-1'}`} />
+              </button>
+            </motion.div>
+          );
+        })}
       </div>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-card rounded-2xl p-6 shadow-card border border-border/50 mt-8">
